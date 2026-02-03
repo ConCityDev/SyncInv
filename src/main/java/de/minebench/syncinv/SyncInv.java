@@ -188,7 +188,9 @@ public final class SyncInv extends JavaPlugin {
         // Plugin startup logic
         loadConfig();
         
-        playerDataFolder = new File(getServer().getWorlds().get(0).getWorldFolder(), "playerdata");
+        playerDataFolder = getServer().getMinecraftVersion().startsWith("1.")
+                ? new File(getServer().getWorlds().get(0).getWorldFolder(), "playerdata")
+                : new File(new File(getServer().getWorlds().get(0).getWorldFolder(), "players"), "data");
         try {
             Method methodGetOfflinePlayer = getServer().getClass().getMethod("getOfflinePlayer", GameProfile.class);
             getOfflinePlayer = (gameProfile -> {
