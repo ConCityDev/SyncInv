@@ -47,6 +47,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -191,13 +193,30 @@ public final class SyncInv extends JavaPlugin {
         playerDataFolder = getServer().getMinecraftVersion().startsWith("1.")
                 ? new File(getServer().getWorlds().get(0).getWorldFolder(), "playerdata")
                 : new File(new File(getServer().getWorlds().get(0).getWorldFolder(), "players"), "data");
+
+        MethodHandle tempUUIDGetterHandle = null;
+        try {
+            tempUUIDGetterHandle = MethodHandles.privateLookupIn(GameProfile.class, MethodHandles.lookup()).findGetter(GameProfile.class, "id", UUID.class);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            getLogger().log(Level.SEVERE, "Could not get MethodHandle to access uuids from GameProfile. If anything happens, we will be unable to log the uuids!", e);
+        }
+        // java being java. We can't assign a final variable in a try block.
+        final MethodHandle uuidGetterHandle = tempUUIDGetterHandle;
+
         try {
             Method methodGetOfflinePlayer = getServer().getClass().getMethod("getOfflinePlayer", GameProfile.class);
             getOfflinePlayer = (gameProfile -> {
                 try {
                     return  (OfflinePlayer) methodGetOfflinePlayer.invoke(getServer(), gameProfile);
                 } catch (IllegalAccessException | InvocationTargetException e) {
-                    logDebug("Could not create offline player for " + gameProfile.getId() + "! " + e.getMessage());
+                    if (uuidGetterHandle != null) {
+                        try {
+                            logDebug("Could not create offline player for " + uuidGetterHandle.invoke(gameProfile) + "! " + e.getMessage());
+                        } catch (Throwable ex) {
+                            logDebug("Could not create offline player. " + e.getMessage());
+                            logDebug("And uuid lookup failed: " + ex.getMessage());
+                        }
+                    }
                 }
                 return null;
             });
@@ -211,7 +230,14 @@ public final class SyncInv extends JavaPlugin {
                         Object nameAndId = nameAndIdConstructor.newInstance(gameProfile);
                         return  (OfflinePlayer) methodGetOfflinePlayer.invoke(getServer(), nameAndId);
                     } catch (IllegalAccessException | InvocationTargetException | InstantiationException e1) {
-                        logDebug("Could not create offline player for " + gameProfile.getId() + "! " + e.getMessage());
+                        if (uuidGetterHandle != null) {
+                            try {
+                                logDebug("Could not create offline player for " + uuidGetterHandle.invoke(gameProfile) + "! " + e.getMessage());
+                            } catch (Throwable e2) {
+                                logDebug("Could not create offline player. " + e.getMessage());
+                                logDebug("And uuid lookup failed: " + e2.getMessage());
+                            }
+                        }
                     }
                     return null;
                 });
