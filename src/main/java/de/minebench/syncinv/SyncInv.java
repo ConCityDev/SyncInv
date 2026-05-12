@@ -52,6 +52,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.AbstractMap;
 import java.util.Date;
 import java.util.EnumSet;
@@ -176,9 +177,17 @@ public final class SyncInv extends JavaPlugin {
         // Plugin startup logic
         loadConfig();
 
-        playerDataFolder = getServer().getMinecraftVersion().startsWith("1.")
-                ? new File(getServer().getWorlds().get(0).getWorldFolder(), "playerdata")
-                : new File(new File(getServer().getWorlds().get(0).getWorldFolder(), "players"), "data");
+        if (getServer().getMinecraftVersion().startsWith("1.")) {
+            playerDataFolder = new File(getServer().getWorlds().get(0).getWorldFolder(), "playerdata");
+        } else {
+            try {
+                Method getLevelDirectory = getServer().getClass().getMethod("getLevelDirectory");
+                playerDataFolder = ((Path) getLevelDirectory.invoke(getServer())).resolve("players/data").toFile();
+            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                throw new UnsupportedOperationException("Server with version " + getServer().getBukkitVersion() + " is not supported! (Can't get the player data folder)", e);
+            }
+        }
+        logDebug("Player data folder is at " + playerDataFolder.getPath());
 
         MethodHandle tempUUIDGetterHandle = null;
         try {
