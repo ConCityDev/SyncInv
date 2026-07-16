@@ -2,6 +2,7 @@ name: ${project.name}
 version: '${minecraft.plugin.version}'
 api-version: '1.21.1'
 main: de.minebench.syncinv.SyncInv
+depend: [NBTAPI]
 softdepend: [OpenInv]
 authors: [Phoenix616]
 description: ${project.description}

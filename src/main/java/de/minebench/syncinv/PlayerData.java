@@ -96,7 +96,15 @@ public record PlayerData(long timeStamp, int dataVersion, UUID playerId, String 
         byte[][] itemByteArray = new byte[items.length][];
         for (int i = 0; i < items.length; i++) {
             ItemStack item = items[i];
-            itemByteArray[i] = item != null ? item.serializeAsBytes() : null;
+            if (item == null) {
+                itemByteArray[i] = null;
+                continue;
+            }
+            try {
+                itemByteArray[i] = ItemNBTSerializer.serialize(item);
+            } catch (Exception e) {
+                throw new RuntimeException("Could not serialize item at slot " + i, e);
+            }
         }
         return itemByteArray;
     }
@@ -105,7 +113,15 @@ public record PlayerData(long timeStamp, int dataVersion, UUID playerId, String 
         ItemStack[] itemsArray = new ItemStack[items.length];
         for (int i = 0; i < items.length; i++) {
             byte[] itemBytes = items[i];
-            itemsArray[i] = itemBytes != null ? ItemStack.deserializeBytes(itemBytes) : null;
+            if (itemBytes == null) {
+                itemsArray[i] = null;
+                continue;
+            }
+            try {
+                itemsArray[i] = ItemNBTSerializer.deserialize(itemBytes);
+            } catch (Exception e) {
+                throw new RuntimeException("Could not deserialize item at slot " + i, e);
+            }
         }
         return itemsArray;
     }
