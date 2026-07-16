@@ -43,22 +43,25 @@ public class RedisMessenger extends ServerMessenger {
 
     public RedisMessenger(SyncInv plugin) {
         super(plugin);
-        RedisURI uri = new RedisURI();
+        RedisURI.Builder builder;
         if (plugin.getConfig().isSet("redis.uri")) {
-            uri = RedisURI.create(plugin.getConfig().getString("redis.uri"));
+            builder = RedisURI.builder(RedisURI.create(plugin.getConfig().getString("redis.uri")));
+        } else {
+            builder = RedisURI.builder();
         }
         if (plugin.getConfig().isSet("redis.host")) {
-            uri.setHost(plugin.getConfig().getString("redis.host"));
+            builder.withHost(plugin.getConfig().getString("redis.host"));
         }
         if (plugin.getConfig().isSet("redis.port")) {
-            uri.setPort(plugin.getConfig().getInt("redis.port"));
+            builder.withPort(plugin.getConfig().getInt("redis.port"));
         }
         if (plugin.getConfig().isSet("redis.password")) {
-            uri.setPassword(plugin.getConfig().getString("redis.password"));
+            builder.withPassword(plugin.getConfig().getString("redis.password"));
         }
         if (plugin.getConfig().isSet("redis.timeout")) {
-            uri.setTimeout(Duration.ofSeconds(plugin.getConfig().getLong("redis.timeout")));
+            builder.withTimeout(Duration.ofSeconds(plugin.getConfig().getLong("redis.timeout")));
         }
+        RedisURI uri = builder.build();
         client = RedisClient.create(uri);
 
         StatefulRedisPubSubConnection<String, byte[]> connection = client.connectPubSub(new StringByteArrayCodec());
