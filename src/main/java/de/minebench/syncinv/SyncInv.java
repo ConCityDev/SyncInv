@@ -5,7 +5,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import com.lishid.openinv.OpenInv;
-import com.lishid.openinv.command.OpenInvCommand;
 import com.mojang.authlib.GameProfile;
 import de.minebench.syncinv.listeners.MapCreationListener;
 import de.minebench.syncinv.listeners.PlayerConnectionValidateLoginListener;
@@ -274,7 +273,7 @@ public final class SyncInv extends JavaPlugin {
                     "With the wrong version version present storing unknown players will fail!");
             }
 
-            OpenInvCommand openInvCommand = (OpenInvCommand) openInv.getCommand("openinv").getExecutor();
+            CommandExecutor openInvCommand = openInv.getCommand("openinv").getExecutor();
             CommandExecutor forwarding = (sender, command, label, args) -> {
                 if (sender instanceof Player && args.length > 0 && (!getMessenger().isAllowedToBeAlone() || !getMessenger().isAlone())) {
                     if ("?".equalsIgnoreCase(args[0])) {
